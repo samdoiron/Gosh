@@ -1,30 +1,38 @@
 #include <iostream>
+#include <time.h>
+#include <ncurses.h>
+#include <stdlib.h>
+
 using std::cout;
 using std::endl;
 using std::cin;
 
 /********************************************\
- * Game class, contains all state information
+ * GoL class, contains all state information
  * for an entire running session in GoL.
 \********************************************/
-class Game 
+// TODO make this a header file
+class GoL 
 {
-    int generation;
-    static const int ROWS = 5;
-    static const int COLS = 10;
-    bool board[5][20];
+    static const int ROWS = 20;
+    static const int COLS = 27;
+    bool board[20][27];
     // TODO Variable size for array (Vector?)
 
     public:
-        Game();     // Constructor TODO Variable size as Params
+        GoL();     // Constructor TODO Variable size as Params
         void printBoard();  // Display to STDOUT
         void tick();        // Update board to next Generation
+        int generation;
+        void printBoardNoCurse();
 };
 
                     
 int main(void)
 {
-    Game *g = new Game();
+    initscr();
+    GoL *g = new GoL();
+
     for (;;) {
         g->printBoard();
         g->tick();
@@ -33,94 +41,98 @@ int main(void)
 
 
 /*****************************************\
- * Constructor for Game class
+ * Constructor for GoL class
  * currently takes no parameters.
- * Reads 200 booleans (1 or 0) from STDIN
+ * 
+ * Reads a (currently fixed) number of
+ * cells from STDIN, sets them as the
+ * current board.
 \*****************************************/
-Game::Game()
+GoL::GoL()
 {
-    /*
-     *for (int i = 0; i < this->ROWS; i++) {
-     *    for (int j = 0; j < this->cols; j++) {
-     *        cin >> this->board[i][j];
-     *    }
-     *}
-     */
-
-    bool tempBoard[][10] = {{0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-                           {0, 0, 0, 1, 0, 0, 0, 0, 0, 0},
-                           {0, 0, 0, 0, 1, 0, 0, 0, 0, 0},
-                           {0, 0, 1, 1, 1, 0, 0, 0, 0, 0},
-                           {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}}; 
-
+    this->generation = 1;
     for (int i = 0; i < this->ROWS; ++i) {
         for (int j = 0; j < this->COLS; ++j) {
-            this->board[i][j] = tempBoard[i][j];
+            cin >> this->board[i][j];
         }
     }
-
 }
 
 
-void Game::printBoard()
+void GoL::printBoard()
 {
+    clear();
     for (int i = 0; i < this->ROWS; ++i) {
         for (int j = 0; j < this->COLS; ++j) {
-            cout << (this->board[i][j] ? "#" : " ") << " ";
+            printw(this->board[i][j] ? "# " : ". ");
         }
-        cout << endl;
+        printw("\n");
     }
-
-    cout << endl << endl;
+    refresh();
 }
 
 
-void Game::tick()
+/*******************************************
+ * Gol Tick Function
+ *
+ * Performs the basic logic and calculation
+ * for a GoL session. When run, updates
+ * the games board to the next generation.
+ *******************************************/
+void GoL::tick()
 {
-    int herber;
-    cin >> herber;
-    herber += 1;
-
-    int newBoard[5][10]; // FIXME this should be dynamic
+    usleep(1 * 100000);
+    this->generation++;
+    bool newBoard[20][27]; // FIXME this should be dynamicly
                                           // sized (vector maybe?)
 
     for (int i = 0; i < this->ROWS; ++i) {
         for (int j = 0; j < this->COLS; ++j) {
-            newBoard[i][j] = this->board[i][j];
+            newBoard[i][j] = 0;
         }
     }
+
 
     for (int i = 0; i < this->ROWS; ++i) {
         for (int j = 0; j < this->COLS; ++j) {
             int adjCount = 0;
+
+            // Cycles through deltas for adjecent cell calculation
             for (int di = -1; di < 2; ++di) {
                 for (int dj = -1; dj < 2; ++dj) {
                     int newI = i + di;
                     int newJ = j + dj;
 
-                    if (newI > 0 and newI < this->ROWS) {
-                        if (newJ > 0 and newJ < this->COLS) {
-                            adjCount += this->board[newI][newJ];
-                        }
+                    // Toidial Cycling (Buzzword Synergy)
+                    if (newI >= this->ROWS) {
+                        newI -= this->ROWS;
                     }
+                     
+                    if (newI < 0) {
+                        newI += this->ROWS;
+                    } 
+
+                    if (newJ >= this->COLS) {
+                        newJ -= this->COLS;
+                    }
+
+                    if (newJ < 0) {
+                        newJ += this->COLS;
+                    }
+
+                    adjCount += this->board[newI][newJ];
                 }
             }
 
-            if (this->board[i][j]) {
-                --adjCount;  // Adjcount adds with (0, 0) 
-                             // which means this hack is needed
-            }
-
-            cout << adjCount;
-            if (adjCount < 2 or adjCount > 3) {
-                newBoard[i][j] = 0;
+            // This is where the magic happens
+            if (adjCount == 4 and this->board[i][j]) {
+                newBoard[i][j] = 1;
             }
 
             if (adjCount == 3) {
                 newBoard[i][j] = 1;
             }
         }
-        cout << endl;
     }
 
     for (int i = 0; i < this->ROWS; ++i) {
@@ -129,3 +141,4 @@ void Game::tick()
         }
     }
 }
+
