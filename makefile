@@ -1,4 +1,4 @@
-all: to.cpp
+all: mainClass.cpp
 	clang++ -Weverything -Werror -std=c++11 -pedantic -o mainClass mainClass.cpp -lncurses
 
 clean:
