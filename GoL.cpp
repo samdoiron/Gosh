@@ -1,55 +1,24 @@
+#include "GoL.h"
 #include <iostream>
 #include <time.h>
 #include <ncurses.h>
-#include <stdlib.h>
 
 using std::cout;
 using std::endl;
 using std::cin;
 
-/********************************************\
- * GoL class, contains all state information
- * for an entire running session in GoL.
-\********************************************/
-// TODO make this a header file
-class GoL 
-{
-    static const int ROWS = 20;
-    static const int COLS = 27;
-    bool board[20][27];
-    // TODO Variable size for array (Vector?)
-
-    public:
-        GoL();     // Constructor TODO Variable size as Params
-        void printBoard();  // Display to STDOUT
-        void tick();        // Update board to next Generation
-        int generation;
-        void printBoardNoCurse();
-};
-
-                    
-int main(void)
-{
-    initscr();
-    GoL *g = new GoL();
-
-    for (;;) {
-        g->printBoard();
-        g->tick();
-    }
-}
 
 
-/*****************************************\
- * Constructor for GoL class
- * currently takes no parameters.
- * 
- * Reads a (currently fixed) number of
- * cells from STDIN, sets them as the
- * current board.
-\*****************************************/
+/*----------------------------------------*
+ | Constructor for GoL class
+ | ------------------------- 
+ | Reads a (currently fixed) number of
+ | cells from STDIN, sets them as the
+ | current board.
+ *----------------------------------------*/
 GoL::GoL()
 {
+    initscr();
     this->generation = 1;
     for (int i = 0; i < this->ROWS; ++i) {
         for (int j = 0; j < this->COLS; ++j) {
@@ -58,7 +27,12 @@ GoL::GoL()
     }
 }
 
-
+/*------------------------------------------*
+ | PrintBoard 
+ | -----------
+ | Prints board to STDOUT using the ncurses
+ | library. Treats 1 as alive and 0 as dead.
+ *------------------------------------------*/
 void GoL::printBoard()
 {
     clear();
@@ -72,20 +46,22 @@ void GoL::printBoard()
 }
 
 
-/*******************************************
- * Gol Tick Function
- *
- * Performs the basic logic and calculation
- * for a GoL session. When run, updates
- * the games board to the next generation.
- *******************************************/
+/*------------------------------------------*
+ | Gol Tick 
+ | --------
+ | Performs the basic logic and calculation
+ | for a GoL session. When run, updates
+ | the games board to the next generation.
+ *-----------------------------------------*/
 void GoL::tick()
 {
     usleep(1 * 100000);
     this->generation++;
-    bool newBoard[20][27]; // FIXME this should be dynamicly
-                                          // sized (vector maybe?)
+    bool newBoard[20][40]; // FIXME this should be dynamicly
+                           // sized (vector maybe?)
+    
 
+    // Create new zero'd array for temperary board manipulation.
     for (int i = 0; i < this->ROWS; ++i) {
         for (int j = 0; j < this->COLS; ++j) {
             newBoard[i][j] = 0;
@@ -103,7 +79,7 @@ void GoL::tick()
                     int newI = i + di;
                     int newJ = j + dj;
 
-                    // Toidial Cycling (Buzzword Synergy)
+                    // Toidial Cycling 
                     if (newI >= this->ROWS) {
                         newI -= this->ROWS;
                     }
@@ -135,10 +111,13 @@ void GoL::tick()
         }
     }
 
+    // Finally, copy the temperary array into the main array.
     for (int i = 0; i < this->ROWS; ++i) {
         for (int j = 0; j < this->COLS; ++j) {
             this->board[i][j] = newBoard[i][j];
         }
     }
 }
+
+
 
